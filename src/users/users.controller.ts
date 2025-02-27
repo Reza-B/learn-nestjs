@@ -20,6 +20,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import * as bcrypt from 'bcrypt';
 
 @ApiTags('users')
 @Controller('users')
@@ -53,13 +54,17 @@ export class UsersController {
   @ApiBody({ type: CreateUserDto })
   @ApiOperation({ summary: 'Create new users' })
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    return this.usersService.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
   }
 
   @ApiOperation({ summary: 'Get all users' })
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard) // نیاز به لاگین دارد
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.usersService.findAll();
